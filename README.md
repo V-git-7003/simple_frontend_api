@@ -37,6 +37,37 @@ Open http://localhost:5173 and click the button.
 
 If the mock is not running, `fetch` fails and the page shows an error. That is expected: there is nothing listening on port 3001.
 
+## Vite and Express
+
+These are two separate Node programs. They do not share memory or call each other’s functions. They only meet over HTTP.
+
+**Vite** is a frontend dev server (and, in other projects, a production bundler). `npm run dev` starts it. It serves `index.html` at http://localhost:5173, serves `src/main.js` and `src/style.css` as native ES modules, and reloads the page when those files change. Vite is not the backend: it does not run `app.post(...)`. It only delivers HTML/JS/CSS so the browser can run `fetch`. This demo uses the **dev** server only; a production app would typically `vite build` to static files and host those somewhere else.
+
+**Express** is a small HTTP server library. `npm run mock` runs `server/mock.js`, which listens on http://localhost:3001. A few Express pieces in that file:
+
+- `app.use(...)` is **middleware**: it runs on matching requests before your route. `cors` and `express.json()` are middleware.
+- `app.post("/api/action", handler)` is a **route**: only `POST` to that path hits this function.
+- `req` is the incoming request (`req.body` is the JSON the browser sent).
+- `res.json(...)` writes status 200, `Content-Type: application/json`, and the body.
+
+| | Vite | Express |
+|---|---|---|
+| Job | Serve the UI | Handle API requests |
+| Port | 5173 | 3001 |
+| Audience | Browser loading the app | Browser `fetch` (or `curl`) |
+| Typical code | HTML, JS, CSS | Routes, DB, auth, business logic |
+
+`npm start` uses `concurrently` so both stay running. Vite never sees the POST. Express never serves your CSS.
+
+### A click, end to end
+
+1. You open http://localhost:5173 → Vite sends HTML/JS.
+2. You click the button → `main.js` runs `fetch("http://localhost:3001/api/action", ...)`.
+3. The browser may first send `OPTIONS` (CORS preflight). Express/`cors` answers that.
+4. The browser sends `POST` with `{ "action": "demo" }`.
+5. Express runs the route and `res.json(...)`.
+6. `main.js` reads `res.status` and the JSON and prints it.
+
 ## How to inspect the conversation
 
 1. Open DevTools → **Network**.
@@ -93,8 +124,22 @@ app.post("/api/action", (req, res) => {
 
 **The button is not the backend.** It only schedules a request. Work happens in `app.post(...)`.
 
+**Vite can proxy the API (optional).** Instead of calling `http://localhost:3001` from the browser (and dealing with CORS), many apps add a proxy in `vite.config.js` so `/api` is forwarded to Express:
+
+```js
+server: {
+  port: 5173,
+  proxy: {
+    "/api": "http://localhost:3001",
+  },
+}
+```
+
+Then the frontend would `fetch("/api/action")`. The browser thinks it is talking to 5173; Vite forwards to Express. Same two processes, one origin from the browser’s point of view. This demo skips that on purpose so you can see CORS and two URLs in Network.
+
 ## Try next
 
 - Change the JSON in `main.js` and confirm `received` on the page.
 - Return a 400 from Express and handle `!res.ok` in the frontend.
 - Point `fetch` at a real API URL and keep the same request/response pattern.
+- Add the Vite proxy above, switch `fetch` to `/api/action`, and compare Network (no cross-origin `OPTIONS` to 3001).
