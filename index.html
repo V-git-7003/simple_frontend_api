@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trigger action</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Frontend → backend</h1>
+      <p>
+        This button does not run backend code. It sends an HTTP request. The mock
+        server on port 3001 receives it and returns JSON.
+      </p>
+      <button id="trigger" type="button">Trigger action</button>
+      <pre id="result">Click the button to call POST /api/action</pre>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

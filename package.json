@@ -1,0 +1,17 @@
+{
+  "name": "frontend-button-demo",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "mock": "node server/mock.js",
+    "start": "concurrently -n vite,mock -c cyan,magenta \"npm run dev\" \"npm run mock\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "vite": "^6.2.0"
+  }
+}
